@@ -1,0 +1,43 @@
+name: Download Qt SDK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  qt-sdk:
+    runs-on: ubuntu-22.04
+
+    env:
+      QT_VERSION: 6.8.0
+
+    steps:
+      - name: Install Python
+        run: |
+          sudo apt update
+          sudo apt install -y python3 python3-pip
+
+      - name: Install aqtinstall
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install aqtinstall
+
+      - name: Download Qt SDK
+        run: |
+          python3 -m aqt install-qt linux desktop $QT_VERSION gcc_64 \
+            --outputdir $HOME/Qt \
+            --base https://download.qt.io
+
+      - name: Verify Qt
+        run: |
+          $HOME/Qt/$QT_VERSION/gcc_64/bin/qmake --version
+
+      - name: Pack SDK
+        run: |
+          cd $HOME
+          tar czf qt-${QT_VERSION}-linux-gcc64.tar.gz Qt
+
+      - name: Upload SDK
+        uses: actions/upload-artifact@v4
+        with:
+          name: qt-sdk-linux-gcc64
+          path: /home/runner/qt-${{ env.QT_VERSION }}-linux-gcc64.tar.gz
